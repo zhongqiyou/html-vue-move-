@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>适配移动端的拖动效果</title>
+    <style>
+        * {
+            touch-action: pan-y;
+            padding: 0;
+            margin: 0;
+        }
+        
+        #div2,
+        #div3,
+        #div4,
+        #div5 {
+            /* display: none; */
+        }
+        
+        #div1 {
+            position: relative;
+            height: 2rem;
+            width: 2rem;
+            border: 1px solid #000000;
+            top: 0.5rem;
+        }
+        
+        #div2,
+        .div2 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: #bbbbbb;
+        }
+        
+        #div3,
+        .div3 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: yellow;
+        }
+        
+        #div4,
+        .div4 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: orange;
+        }
+        
+        #div5,
+        .div5 {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.5rem;
+            height: 0.5rem;
+            background: red;
+        }
+        
+        .div2 {}
+        
+        .div3 {
+            margin-left: 0.5rem;
+        }
+        
+        .div4 {
+            margin-left: 1rem;
+        }
+        
+        .div5 {
+            margin-left: 1.5rem;
+        }
+        
+        .div2,
+        .div3,
+        .div4,
+        .div5 {
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="div1">
+        <div id="div2"></div>
+        <div id="div3"></div>
+        <div id="div4"></div>
+        <div id="div5"></div>
+    </div>
+    <div>
+        <div class="div2"></div>
+        <div class="div3"></div>
+        <div class="div4"></div>
+        <div class="div5"></div>
+    </div>
+    <script>
+        // 适配
+        (function() {
+            // 在标准 375px 适配下，100px = 1rem;
+            var baseFontSize = 100;
+            var baseWidth = 375;
+
+            var set = function() {
+                var clientWidth = document.documentElement.clientWidth || window.innerWidth;
+
+                var rem = 100;
+                if (clientWidth != baseWidth) {
+                    rem = Math.floor(clientWidth / baseWidth * baseFontSize);
+                }
+
+                document.querySelector('html').style.fontSize = rem + 'px';
+            }
+            set();
+
+            window.addEventListener('resize', set);
+        }());
+
+
+
+        var div2 = document.getElementById("div2");
+        var div3 = document.getElementById("div3");
+        var div4 = document.getElementById("div4");
+        var div5 = document.getElementById("div5");
+
+        var cdiv2 = document.querySelector(".div2");
+        var cdiv3 = document.querySelector(".div3");
+        var cdiv4 = document.querySelector(".div4");
+        var cdiv5 = document.querySelector(".div5");
+
+
+        function autoMove(el, firstx, firsty, callback) {
+            let flag = false;
+            let cur = {
+                x: firstx,
+                y: firsty
+            }
+            let nx, ny, dx, dy, x, y;
+            x = firstx;
+            y = firsty;
+            el.style.left = cur.x + "px";
+            el.style.top = cur.y + "px";
+
+            function down() {
+                flag = true;
+                var touch;
+                if (event.touches) {
+                    touch = event.touches[0];
+                } else {
+                    touch = event;
+                }
+                cur.x = touch.clientX;
+                cur.y = touch.clientY;
+                dx = el.offsetLeft;
+                dy = el.offsetTop;
+            }
+
+            function move() {
+                let html = document.querySelector("html");
+                let font = window.getComputedStyle(html).fontSize;
+                let size = font.slice(0, -2);
+                console.log(size);
+
+                console.log();
+                if (flag) {
+                    var touch;
+                    if (event.touches) {
+                        touch = event.touches[0];
+                    } else {
+                        touch = event;
+                    }
+                    nx = touch.clientX - cur.x;
+                    ny = touch.clientY - cur.y;
+                    // console.log("x:" + nx , "y:" + ny);
+                    x = dx + nx;
+                    y = dy + ny;
+                    if (x <= 0) x = 0
+                    if (x >= size * 1.5) x = parseInt(size) * 1.5;
+                    if (y <= 0) y = 0
+                    if (y >= size * 1.5) y = parseInt(size) * 1.5;
+                    el.style.left = x + "px";
+                    el.style.top = y + "px";
+                    console.log("x:" + x, "y:" + y);
+                    //阻止页面的滑动默认事件
+                    document.addEventListener("touchmove", function() {
+                        event.preventDefault();
+                    }, false);
+                }
+            }
+            //鼠标释放时候的函数
+            function end() {
+                flag = false;
+                callback(x, y)
+            }
+            el.addEventListener("mousedown", function() {
+                down();
+            }, false);
+            el.addEventListener("touchstart", function() {
+                down();
+            }, false)
+            el.addEventListener("mousemove", function() {
+                move();
+            }, false);
+            el.addEventListener("touchmove", function() {
+                move();
+            }, false)
+            document.body.addEventListener("mouseup", function() {
+                end();
+            }, false);
+            el.addEventListener("touchend", function() {
+                end();
+            }, false);
+        }
+
+
+
+
+        // start
+        let res = JSON.parse(localStorage.getItem("data1"));
+        if (!res) {
+            var data = {
+                div2: {
+                    bool: true,
+                    resx: 0,
+                    resy: 0,
+                    opacity: 0.3
+                },
+                div3: {
+                    bool: true,
+                    resx: 0,
+                    resy: 0,
+                    opacity: 0.3
+                },
+                div4: {
+                    bool: true,
+                    resx: 0,
+                    resy: 0,
+                    opacity: 0.3
+                },
+                div5: {
+                    bool: true,
+                    resx: 0,
+                    resy: 0,
+                    opacity: 0.3
+                }
+            };
+            let data1 = JSON.stringify(data);
+            localStorage.setItem("data1", data1);
+        } else {
+            if (res.div2.bool) {
+                div2.style.display = "none";
+                cdiv2.style.opacity = 0.3;
+            } else {
+                div2.style.display = "block";
+                cdiv2.style.opacity = 1;
+            }
+
+            if (res.div3.bool) {
+                div3.style.display = "none";
+                cdiv3.style.opacity = 0.3;
+            } else {
+                div3.style.display = "block";
+                cdiv3.style.opacity = 1;
+            }
+
+
+            if (res.div4.bool) {
+                div4.style.display = "none";
+                cdiv4.style.opacity = 0.3;
+            } else {
+                div4.style.display = "block";
+                cdiv4.style.opacity = 1;
+            }
+
+            if (res.div5.bool) {
+                div5.style.display = "none";
+                cdiv5.style.opacity = 0.3;
+            } else {
+                div5.style.display = "block";
+                cdiv5.style.opacity = 1;
+            }
+        }
+
+
+        cdiv2.onclick = function() {
+            console.log(res.div2.bool);
+            if (res.div2.bool) {
+                div2.style.display = "block";
+                res.div2.opacity = 1;
+                cdiv2.style.opacity = res.div2.opacity;
+                res.div2.bool = false;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            } else {
+                div2.style.display = "none";
+                res.div2.opacity = 0.3;
+                cdiv2.style.opacity = res.div2.opacity;
+                res.div2.bool = true;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            }
+        }
+        cdiv3.onclick = function() {
+            if (res.div3.bool) {
+                div3.style.display = "block";
+                res.div3.opacity = 1;
+                cdiv3.style.opacity = res.div3.opacity;
+                res.div3.bool = false;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            } else {
+                div3.style.display = "none";
+                res.div3.opacity = 0.3;
+                cdiv3.style.opacity = res.div3.opacity;
+                res.div3.bool = true;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            }
+
+        }
+        cdiv4.onclick = function() {
+            if (res.div4.bool) {
+                div4.style.display = "block";
+                res.div4.opacity = 1;
+                cdiv4.style.opacity = res.div4.opacity;
+                res.div4.bool = false;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            } else {
+                div4.style.display = "none";
+                res.div4.opacity = 0.3;
+                cdiv4.style.opacity = res.div4.opacity;
+                res.div4.bool = true;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            }
+
+        }
+        cdiv5.onclick = function() {
+            if (res.div5.bool) {
+                div5.style.display = "block";
+                res.div5.opacity = 1;
+                cdiv5.style.opacity = res.div5.opacity;
+                res.div5.bool = false;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            } else {
+                div5.style.display = "none";
+                res.div5.opacity = 0.3;
+                cdiv5.style.opacity = res.div5.opacity;
+                res.div5.bool = true;
+                let data1 = JSON.stringify(res);
+                localStorage.setItem("data1", data1);
+            }
+
+        }
+
+
+
+        // end
+
+        let auto_div2 = new autoMove(div2, res.div2.resx, res.div2.resy, (x, y) => {
+            res.div2.resx = x;
+            res.div2.resy = y;
+            let data1 = JSON.stringify(res);
+            localStorage.setItem("data1", data1);
+        })
+        let auto_div3 = new autoMove(div3, res.div3.resx, res.div3.resy, (x, y) => {
+            res.div3.resx = x;
+            res.div3.resy = y;
+            let data1 = JSON.stringify(res);
+            localStorage.setItem("data1", data1);
+        })
+        let auto_div4 = new autoMove(div4, res.div4.resx, res.div4.resy, (x, y) => {
+            res.div4.resx = x;
+            res.div4.resy = y;
+            let data1 = JSON.stringify(res);
+            localStorage.setItem("data1", data1);
+        })
+        let auto_div5 = new autoMove(div5, res.div5.resx, res.div5.resy, (x, y) => {
+            res.div5.resx = x;
+            res.div5.resy = y;
+            let data1 = JSON.stringify(res);
+            localStorage.setItem("data1", data1);
+        })
+    </script>
+</body>
+
+</html>
+
+<!-- https://www.cnblogs.com/libin-1/p/6149057.html -->
